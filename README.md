@@ -1,8 +1,11 @@
 # Neural Lab
 
+**▶ Abrir el laboratorio: https://neural-lab-xi.vercel.app**
+
 Laboratorio interactivo de aprendizaje profundo para estudiantes de Derecho sin
 formación técnica previa. Página única, sin dependencias externas y sin servidor:
-las seis redes neuronales se entrenan en el navegador de quien la abre.
+las seis redes neuronales se entrenan en el navegador de quien la abre, y ningún
+dato sale del equipo.
 
 ## Contenido
 
@@ -23,11 +26,20 @@ Diez estaciones en orden de dificultad creciente:
 
 Un glosario transversal cubre todos los términos técnicos que aparecen en el
 texto: definición sin jerga, analogía, ejemplo numérico, error de interpretación
-frecuente y, cuando procede, relevancia en el análisis jurídico.
+frecuente y, cuando procede, relevancia en el análisis jurídico. Tres niveles de
+redacción —sin tecnicismos, intermedio y avanzado— reescriben las explicaciones
+de todo el laboratorio.
+
+## Uso en clase
+
+La estación 10 incluye una guía docente con una secuencia de 90 minutos, seis
+preguntas de examen y las limitaciones que conviene advertir al grupo. Cada
+estudiante puede generar al final un informe con sus respuestas y conclusiones.
 
 ## Despliegue
 
-Sitio estático de un solo archivo. Vercel lo sirve tal cual; no hay build.
+Sitio estático de un solo archivo; no hay build. Cada push a `main` despliega en
+Vercel automáticamente.
 
 ## Advertencia
 
