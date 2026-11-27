@@ -836,6 +836,12 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
         <h3>Mapa de decisiones</h3>
         <canvas id="s5map" height="360" aria-label="Mapa de decisiones de la red"></canvas>
         <p><small id="s5axes"></small></p>
+        <div class="row" id="s5draw" hidden>
+          <button class="btn sm primary" data-cls="1">Añadir clase ámbar</button>
+          <button class="btn sm" data-cls="0">Añadir clase turquesa</button>
+          <button class="btn sm ghost" id="s5clear">Vaciar</button>
+          <small id="s5count"></small>
+        </div>
         <div class="row">
           <button class="btn primary" id="s5run">▶ Entrenar</button>
           <button class="btn" id="s5step">+1 época</button>
@@ -862,8 +868,9 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
               <option value="phish">Caso: correo sospechoso</option>
               <option value="review">Caso: prioridad de revisión contractual</option>
               <option value="credit">Caso: riesgo crediticio</option>
+              <option value="custom">Tus propios datos: dibújalos tú</option>
             </select></label>
-          <label><span class="lab"><button class="t" data-t="ruido">Ruido</button> en los datos</span><output id="s5noiseo">0.05</output>
+          <label id="s5noiselbl"><span class="lab"><button class="t" data-t="ruido">Ruido</button> en los datos</span><output id="s5noiseo">0.05</output>
             <input id="s5noise" type="range" min="0" max=".5" step=".05" value=".05"></label>
           <label><span class="lab"><button class="t" data-t="capa-oculta">Capas ocultas</button></span>
             <select id="s5depth"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>5</option></select></label>
@@ -884,6 +891,27 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
         <p><small id="s5netnote"></small></p>
       </div>
     </div>
+  </div>
+
+  <div class="card" id="s5unitcard">
+    <h3>Qué ha aprendido cada neurona</h3>
+    <p class="v-b">Cada recuadro es una neurona oculta y muestra su propia frontera: el ámbar es
+    la zona donde se activa en positivo y el turquesa donde lo hace en negativo. Fíjate en que
+    ninguna sabe resolver el problema; cada una traza una raya sencilla. Lo que encierra el
+    círculo es la <em>combinación</em> que hace la capa siguiente.</p>
+    <p class="v-i">Activación de cada unidad de la capa elegida sobre todo el espacio de entrada.
+    Con tanh y datos en círculo verás medios planos orientados en distintas direcciones: la capa
+    de salida los suma con pesos y signos que convierten varias rectas en una región cerrada.</p>
+    <p class="v-a">Visualización de las funciones intermedias aprendidas. Es la evidencia de que
+    una red no almacena reglas sino una base de funciones: las unidades de la primera capa son
+    aproximadamente lineales por tramos y la composición genera la no linealidad. Útil también
+    para detectar unidades muertas con ReLU: aparecen en blanco uniforme.</p>
+    <div class="row">
+      <label style="display:flex;gap:10px;align-items:center;margin:0">Capa
+        <select id="s5layer" style="width:auto"></select></label>
+      <small id="s5unitnote"></small>
+    </div>
+    <canvas id="s5units" height="250" data-fixed="1" aria-label="Frontera de decisión de cada neurona oculta"></canvas>
   </div>
 
   <div class="card">
@@ -999,6 +1027,25 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
       sistema «con umbral 0,5 por defecto», conviene hacer constar que esa cifra implica haber dado el
       mismo peso a los dos tipos de error, lo que rara vez corresponde a la realidad del asunto.</div>
     </div>
+  </div>
+
+  <div class="card" id="s6casecard" hidden>
+    <h3>Interroga un caso</h3>
+    <p>Los 80 correos de prueba, colocados según sus dos señales. El fondo es la puntuación del
+    modelo con el umbral actual como frontera; el relleno de cada punto dice lo que era en
+    realidad y el borde oscuro marca los que el modelo clasifica mal. Haz clic en cualquiera.</p>
+    <div class="grid2 wide-left">
+      <div>
+        <canvas id="s6scatter" height="330" aria-label="Casos de prueba sobre el campo de puntuación"></canvas>
+        <p><small>Horizontal: señales de urgencia. Vertical: anomalías del remitente.</small></p>
+      </div>
+      <div id="s6case"></div>
+    </div>
+    <div class="law">Lo que aparece a la derecha es una explicación contrafáctica: qué tendría
+    que haber sido distinto para que la decisión fuera otra. Es la forma de explicación individual
+    más defendible que admite un modelo de este tipo, y conviene no confundirla con el motivo por
+    el que el sistema decidió: el modelo no tuvo ninguno. Obsérvese además que a veces ninguna de
+    las dos variables, por sí sola, basta para invertir el resultado.</div>
   </div>
 
   <div class="q" data-q="q6" data-ok="1">
@@ -2152,7 +2199,7 @@ function fit(cv){
   if(!cv.dataset.h)cv.dataset.h=String(Math.max(40,parseInt(cv.getAttribute("height"),10)||200));
   const w=Math.max(40,Math.round(cv.getBoundingClientRect().width));
   const base=+cv.dataset.h;
-  const h=w<520?Math.max(170,Math.round(base*.74)):base;   /* más bajo en móvil */
+  const h=(cv.dataset.fixed||w>=520)?base:Math.max(170,Math.round(base*.74));  /* más bajo en móvil */
   cv.dataset.ch=String(h);
   const dpr=Math.min(2,window.devicePixelRatio||1);
   cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+"px";
@@ -2821,6 +2868,7 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
 /* ======================= ESTACIÓN 5 ======================= */
 (function(){
   let train=[],test=[],net=[],epoch=0,hist=[],running=false,timer=null,hyp=null,verdict=false;
+  let drawn=[],addCls=1,lastUnits=0;
 
   const AXES={
     circle:"Ejes: dos variables sintéticas. La clase turquesa ocupa el disco central; la ámbar, el anillo exterior.",
@@ -2829,10 +2877,16 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
     spiral:"Ejes: dos variables sintéticas enrolladas en dos brazos.",
     phish:"Eje horizontal: señales de urgencia. Vertical: anomalías del remitente. Ámbar: sospechoso; turquesa: legítimo.",
     review:"Eje horizontal: desviación respecto de la cláusula estándar. Vertical: exposición económica. Ámbar: revisión prioritaria.",
-    credit:"Eje horizontal: carga de deuda. Vertical: inestabilidad de ingresos. Ámbar: riesgo simulado alto; turquesa: bajo."
+    credit:"Eje horizontal: carga de deuda. Vertical: inestabilidad de ingresos. Ámbar: riesgo simulado alto; turquesa: bajo.",
+    custom:"Haz clic sobre el mapa para colocar casos. Tres de cada cuatro irán a entrenamiento y el cuarto a prueba."
   };
   function makeData(){
     const pat=$("s5pattern").value,noise=+$("s5noise").value,rnd=maker(1234),arr=[];
+    if(pat==="custom"){                       /* los datos los pone el estudiante */
+      train=drawn.filter((_,i)=>i%4!==3);
+      test=drawn.filter((_,i)=>i%4===3);
+      return;
+    }
     for(let i=0;i<320;i++){
       let y=i%2,x,z,r,a;
       if(pat==="circle"){a=rnd()*6.283;r=y?.58+rnd()*.27:rnd()*.37;x=r*Math.cos(a);z=r*Math.sin(a)}
@@ -2883,6 +2937,7 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
     return [loss/ds.length,ok/ds.length];
   }
   function stepEpoch(){
+    if(train.length<2)return;
     const rnd=maker(epoch+99);
     for(let i=train.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[train[i],train[j]]=[train[j],train[i]]}
     train.forEach(learn);epoch++;
@@ -2967,7 +3022,20 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
     label(c,"salida",w-22,h-8,CO.dim,11,"center");
     $("s5netnote").textContent=`Cada línea es un peso real en este instante: turquesa positivo, ámbar negativo, grosor según magnitud. Total: ${params()} parámetros ajustándose a la vez.`;
   }
+  function ready(){return train.length>=6&&test.length>=2}
   function refresh(){
+    if($("s5pattern").value==="custom")updateDrawUI();
+    if(!ready()){
+      ["s5loss","s5acc"].forEach(k=>$(k).textContent="—");
+      $("s5epoch").textContent=epoch;$("s5params").textContent=params();
+      $("s5arch").innerHTML=`<b>Tu conjunto está casi vacío.</b> Coloca al menos ocho casos de cada `+
+        `clase sobre el mapa: hasta entonces no hay nada que aprender.`;
+      $("s5axes").textContent=AXES.custom;
+      $("s5narr").innerHTML="<small>El modelo aprenderá exactamente las etiquetas que tú pongas, con sus aciertos y sus descuidos.</small>";
+      $("s5over").hidden=true;
+      drawMap();drawCurve();drawNet();drawUnits();
+      return;
+    }
     const a=score(train),b=score(test);
     $("s5epoch").textContent=epoch;
     $("s5loss").textContent=fmt(a[0],3)+" / "+fmt(b[0],3);
@@ -2979,7 +3047,66 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
       (d?"Cada capa adicional permite combinar lo detectado por la anterior, a costa de más parámetros y más riesgo de memorizar.":"Sin capas ocultas la frontera es necesariamente una línea recta.");
     $("s5axes").textContent=AXES[$("s5pattern").value]||"";
     $("s5noiseo").textContent=fmt(+$("s5noise").value);
-    drawMap();drawCurve();drawNet();narrate(a,b);
+    drawMap();drawCurve();drawNet();drawUnits();narrate(a,b);
+  }
+
+  /* ---- datos dibujados por el estudiante ---- */
+  function updateDrawUI(){
+    const amb=drawn.filter(d=>d.y===1).length;
+    $("s5count").textContent=`${amb} ámbar · ${drawn.length-amb} turquesa`;
+  }
+  $("s5map").addEventListener("pointerdown",e=>{
+    if($("s5pattern").value!=="custom")return;
+    const r=$("s5map").getBoundingClientRect();
+    drawn.push({x:clamp((e.clientX-r.left)/r.width*2-1,-1,1),
+                z:clamp(1-(e.clientY-r.top)/r.height*2,-1,1),y:addCls});
+    makeData();refresh();
+  });
+  $$("[data-cls]").forEach(b=>b.onclick=()=>{
+    addCls=+b.dataset.cls;
+    $$("[data-cls]").forEach(o=>o.classList.toggle("primary",o===b));
+  });
+  $("s5clear").onclick=()=>{drawn=[];epoch=0;hist=[];makeNet();makeData();refresh()};
+
+  /* ---- qué ha aprendido cada neurona ---- */
+  function drawUnits(){
+    const d=+$("s5depth").value;
+    $("s5unitcard").hidden=!d;
+    if(!d)return;
+    const now=Date.now();
+    if(running&&now-lastUnits<420)return;    /* el muestreo es caro: se refresca con calma */
+    lastUnits=now;
+    const sel=$("s5layer");
+    if(sel.options.length!==d)
+      sel.innerHTML=Array.from({length:d},(_,i)=>`<option value="${i+1}">Capa ${i+1}</option>`).join("");
+    const L=clamp(+sel.value||1,1,d)-1,units=net[L],n=units.length;
+    const cvw=Math.max(140,Math.round($("s5units").getBoundingClientRect().width));
+    const cols=cvw<520?Math.min(n,2):(n<=4?n:(n<=8?4:(cvw>900?8:4)));
+    const rows=Math.ceil(n/cols),pad=8;
+    const tw=Math.floor((cvw-pad*(cols+1))/cols),th=tw;   /* cuadrados: el espacio de entrada lo es */
+    $("s5units").dataset.h=String(rows*(th+pad)+pad);
+    const {c,w,h}=fit($("s5units"));
+    const mid=$("s5act").value==="sigmoid"?.5:0,STEP=7;
+    for(let k=0;k<n;k++){
+      const ox=pad+(k%cols)*(tw+pad),oy=pad+((k/cols)|0)*(th+pad);
+      const vals=[];let span=1e-6;
+      for(let py=0;py<th;py+=STEP)for(let px=0;px<tw;px+=STEP){
+        const v=forward(px/tw*2-1,1-py/th*2)[L+1][k]-mid;
+        vals.push(v);span=Math.max(span,Math.abs(v));
+      }
+      let i=0;
+      for(let py=0;py<th;py+=STEP)for(let px=0;px<tw;px+=STEP){
+        const t=Math.min(1,Math.abs(vals[i++])/span),pos=vals[i-1]>=0;
+        c.fillStyle=pos?`rgb(${Math.round(255-2*t)},${Math.round(255-27*t)},${Math.round(255-79*t)})`
+                       :`rgb(${Math.round(255-54*t)},${Math.round(255-19*t)},${Math.round(255-13*t)})`;
+        c.fillRect(ox+px,oy+py,STEP+.6,STEP+.6);
+      }
+      c.strokeStyle=CO.line;c.lineWidth=1;c.strokeRect(ox+.5,oy+.5,tw,th);
+      label(c,String(k+1),ox+6,oy+15,CO.muted||CO.dim,11.5);
+    }
+    $("s5unitnote").textContent=`${n} neuronas en esta capa. `+
+      (L===0?"Reciben las dos variables directamente."
+            :"Reciben lo que calculó la capa anterior, no los datos.");
   }
   function reset(keepHyp){
     running=false;clearInterval(timer);timer=null;$("s5run").textContent="▶ Entrenar";
@@ -2987,7 +3114,12 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
     if(!keepHyp){hyp=null;verdict=false;$("s5hypfb").textContent="";$$("[data-hyp]").forEach(b=>b.classList.remove("primary"))}
     refresh();
   }
-  ["s5pattern","s5depth","s5width","s5act"].forEach(id=>$(id).onchange=()=>reset());
+  ["s5pattern","s5depth","s5width","s5act"].forEach(id=>$(id).onchange=()=>{
+    const own=$("s5pattern").value==="custom";
+    $("s5draw").hidden=!own;$("s5noiselbl").hidden=own;
+    reset();
+  });
+  $("s5layer").onchange=()=>{lastUnits=0;drawUnits()};
   $("s5noise").oninput=()=>{$("s5noiseo").textContent=fmt(+$("s5noise").value)};
   $("s5noise").onchange=()=>reset();
   $("s5lr").onchange=refresh;
@@ -3017,7 +3149,8 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
 
 /* ======================= ESTACIÓN 6 ======================= */
 (function(){
-  let net=null,tr=[],te=[],scores=[];
+  let net=null,tr=[],te=[],scores=[],pick=-1;
+  const VAR=["señales de urgencia","anomalías del remitente"];
   function data(){
     const rnd=maker(4242),arr=[];
     for(let i=0;i<320;i++){
@@ -3058,6 +3191,69 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
     return {tp,fp,tn,fn};
   }
   function cost(thr,cfp,cfn){const m=matrix(thr);return m.fp*cfp+m.fn*cfn}
+  /* ¿qué valor mínimo de una variable invertiría la decisión? */
+  function flip(d,j,thr){
+    const cur=fw(d.x,d.z).at(-1)[0]>=thr?1:0,base=j===0?d.x:d.z;
+    let best=null;
+    for(let v=-1;v<=1.0001;v+=.01){
+      const p=(j===0?fw(v,d.z):fw(d.x,v)).at(-1)[0];
+      if((p>=thr?1:0)!==cur){
+        const delta=Math.abs(v-base);
+        if(!best||delta<best.delta)best={v,delta};
+      }
+    }
+    return best;
+  }
+  function drawScatter(){
+    const thr=+$("s6thr").value;
+    const {c,w,h}=fit($("s6scatter")),B=8;
+    for(let y=0;y<h;y+=B)for(let x=0;x<w;x+=B){
+      const p=fw(x/w*2-1,1-y/h*2).at(-1)[0];
+      const t=Math.min(1,Math.abs(p-thr)/Math.max(thr,1-thr));
+      c.fillStyle=p<thr?`rgb(${Math.round(255-54*t)},${Math.round(255-19*t)},${Math.round(255-13*t)})`
+                       :`rgb(${Math.round(255-2*t)},${Math.round(255-27*t)},${Math.round(255-79*t)})`;
+      c.fillRect(x,y,B,B);
+    }
+    te.forEach((d,i)=>{
+      const X=(d.x+1)*w/2,Y=(1-d.z)*h/2,bad=(scores[i].p>=thr?1:0)!==d.y;
+      c.beginPath();c.arc(X,Y,i===pick?8:5,0,7);
+      c.fillStyle=d.y?CO.amber:CO.blue;c.fill();
+      if(bad||i===pick){c.strokeStyle=i===pick?CO.deep:CO.deep;c.lineWidth=i===pick?3:1.8;c.stroke()}
+    });
+    label(c,"clic en un caso",8,h-8,CO.dim,11.5);
+  }
+  function showCase(){
+    const thr=+$("s6thr").value;
+    if(pick<0){$("s6case").innerHTML='<p class="live"><small>Selecciona un caso para ver su '+
+      'puntuación y qué habría hecho falta para que la decisión fuera otra.</small></p>';return}
+    const d=te[pick],p=scores[pick].p,dec=p>=thr?1:0,ok=dec===d.y;
+    const tipo=ok?(d.y?"acierto: era sospechoso y lo marca":"acierto: era legítimo y lo deja pasar")
+      :(dec===1?"falso positivo: era legítimo y lo marca":"falso negativo: era sospechoso y lo deja pasar");
+    const cf=[0,1].map(j=>{
+      const f=flip(d,j,thr);
+      return f?`<li>${VAR[j]}: de <b>${fmt(j===0?d.x:d.z)}</b> a <b>${fmt(f.v)}</b> `+
+               `(un cambio de ${fmt(f.delta)})</li>`
+             :`<li>${VAR[j]}: ningún valor, por sí solo, cambia la decisión</li>`;
+    }).join("");
+    $("s6case").innerHTML=
+      `<h4>Caso ${pick+1} de 80</h4>`+
+      `<table><tr><th>${VAR[0]}</th><td class="num">${fmt(d.x)}</td></tr>`+
+      `<tr><th>${VAR[1]}</th><td class="num">${fmt(d.z)}</td></tr>`+
+      `<tr><th>Puntuación del modelo</th><td class="num" style="color:var(--teal);font-weight:700">${fmt(p,3)}</td></tr>`+
+      `<tr><th>Umbral vigente</th><td class="num">${fmt(thr)}</td></tr></table>`+
+      `<p style="margin:14px 0 6px"><b style="color:${ok?"var(--teal)":"var(--amber-deep)"}">`+
+      `${dec?"Marcado como sospechoso":"Dejado pasar"}</b> · ${tipo}.</p>`+
+      `<p style="margin:14px 0 4px"><b>Qué habría bastado para invertirlo</b></p>`+
+      `<ul style="margin:0;padding-left:20px;font-size:.95rem">${cf}</ul>`;
+  }
+  $("s6scatter").addEventListener("pointerdown",e=>{
+    if(!scores.length)return;
+    const r=$("s6scatter").getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width*2-1,z=1-(e.clientY-r.top)/r.height*2;
+    let best=-1,bd=9;
+    te.forEach((d,i)=>{const dd=(d.x-x)**2+(d.z-z)**2;if(dd<bd){bd=dd;best=i}});
+    if(bd<.055){pick=best;drawScatter();showCase()}   /* radio generoso: en móvil se toca con el dedo */
+  });
   function render(){
     const thr=+$("s6thr").value,cfp=+$("s6fp").value,cfn=+$("s6fn").value;
     $("s6to").textContent=fmt(thr);$("s6fpo").textContent=cfp;$("s6fno").textContent=cfn;
@@ -3094,6 +3290,7 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
     label(c,"coste total",4,14,CO.dim,11);
     label(c,"umbral →",w-6,h-6,CO.dim,11,"end");
     label(c,"mínimo en "+fmt(best[0]),X(best[0]),Y(best[1])-10,CO.teal,12,"center");
+    drawScatter();showCase();
     $("s6costread").innerHTML=`Con estos costes, el umbral que minimiza el daño total es <b>${fmt(best[0])}</b>, no 0,50. `+
       (cfn>cfp?"Al pesar más el falso negativo, conviene marcar más casos y asumir falsas alarmas."
        :cfp>cfn?"Al pesar más el falso positivo, conviene marcar solo lo evidente y asumir que se escapan casos."
@@ -3111,7 +3308,7 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
       scores=te.map(d=>({p:fw(d.x,d.z).at(-1)[0],y:d.y}));
       const pos=scores.filter(s=>s.y===1).length;
       $("s6status").innerHTML=`Entrenado: 180 épocas. El conjunto de prueba tiene ${pos} casos sospechosos y ${scores.length-pos} legítimos.`;
-      $("s6panel").hidden=false;render();
+      $("s6panel").hidden=false;$("s6casecard").hidden=false;pick=-1;render();
     },20);
   };
   ["s6thr","s6fp","s6fn"].forEach(id=>$(id).oninput=()=>{if(scores.length)render()});

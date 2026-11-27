@@ -17,8 +17,8 @@ Diez estaciones en orden de dificultad creciente:
 | 2 | La neurona | Las cuatro operaciones de una unidad, número a número |
 | 3 | Error y pérdida | Entropía cruzada, gradiente y tasa de aprendizaje |
 | 4 | Retropropagación | Nueve pasos con aritmética explícita sobre una red 2-2-1 |
-| 5 | Entrena una red | MLP configurable, mapa de decisiones y detección de sobreajuste |
-| 6 | Aciertos y errores | Umbral, matriz de confusión y coste asimétrico de cada error |
+| 5 | Entrena una red | MLP configurable, datos que dibuja el propio estudiante y la frontera que aprende cada neurona |
+| 6 | Aciertos y errores | Umbral, coste asimétrico del error y explicación contrafáctica caso a caso |
 | 7 | Imágenes y CNN | Convolución paso a paso y red convolucional entrenable |
 | 8 | Tipos de predicción | Binaria, multiclase, multietiqueta y regresión |
 | 9 | Sesgos y límites | Disparidad de error por subgrupo con etiquetas históricas sesgadas |
