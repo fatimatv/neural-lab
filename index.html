@@ -343,7 +343,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
   <div class="card">
     <h2>La ruta</h2>
     <p class="v-b">Las estaciones están ordenadas: cada una usa lo aprendido en la anterior. La 1 responde
-    qué significa «aprender»; la 4 abre la <button class="t" data-t="caja-negra">caja negra</button> del aprendizaje; la 9 es la que más te servirá
+    qué significa «aprender»; la 4 abre la <button class="t" data-t="caja-negra">caja negra</button> del aprendizaje; la 10 es la que más te servirá
     cuando tengas que auditar un sistema ajeno.</p>
     <p class="v-i">Secuencia de dificultad creciente: intuición de la optimización (1–3), mecánica del
     aprendizaje (4), experimentación con arquitecturas (5), evaluación y umbrales (6), otras
@@ -455,7 +455,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
 
   <div class="law">Esta raya nunca «decidió» nada: reprodujo la frontera que mejor se ajusta a
   clasificaciones hechas antes por personas. Si esas clasificaciones previas incorporaban un criterio
-  erróneo o discriminatorio, el modelo lo aprenderá con la misma eficacia. La estación 9 lo demuestra
+  erróneo o discriminatorio, el modelo lo aprenderá con la misma eficacia. La estación 10 lo demuestra
   con un caso.</div>
 
   <div class="foot">
@@ -1334,14 +1334,181 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
 
   <div class="foot">
     <button class="btn ghost" data-go="s7">← Estación 7</button>
-    <button class="btn primary" data-go="s9">Estación 9 · Sesgos y límites →</button>
+    <button class="btn primary" data-go="sgan">Estación 9 · Redes adversariales →</button>
   </div>
 </section>
 
-<!-- ============================ ESTACIÓN 9 ============================ -->
-<section class="station" id="s9" hidden>
+<!-- ============================ ESTACIÓN 9 · ADVERSARIALES ============================ -->
+<section class="station" id="sgan" hidden>
   <div class="head">
     <div class="num">09</div>
+    <h2>Redes adversariales: dos modelos que compiten</h2>
+    <p class="goal">Objetivo: ver funcionando el mecanismo que hay detrás de los <button class="t" data-t="deepfake">deepfakes</button>, y
+    entender por qué la detección va por detrás por diseño y no por falta de medios.</p>
+  </div>
+
+  <div class="card">
+    <h3>Aquí no hay nadie que etiquete</h3>
+    <p class="v-b">Todo lo que has entrenado hasta ahora aprendía de ejemplos que alguien había
+    clasificado antes. Una <button class="t" data-t="gan">red adversarial</button> funciona de otra
+    manera: son <b>dos</b> redes con objetivos opuestos, y la señal para aprender la produce el
+    rival, no una persona.</p>
+    <p class="v-i">El <button class="t" data-t="generador">generador</button> fabrica casos falsos a
+    partir de puro ruido. El <button class="t" data-t="discriminador">discriminador</button> recibe
+    reales y falsos mezclados e intenta separarlos. Lo que para uno es acierto, para el otro es
+    error, así que cada uno solo puede mejorar si el otro lo obliga.</p>
+    <p class="v-a">Juego minimax entre G y D. El discriminador minimiza la entropía cruzada binaria
+    sobre reales y falsos; el generador usa la variante no saturante, −log D(G(z)), que mantiene
+    gradiente útil cuando el discriminador va ganando. Optimizador Adam con β₁ = 0,5, el ajuste
+    habitual en la literatura: el descenso plano no estabiliza este juego.</p>
+    <div class="note"><b>El detalle que descoloca a casi todo el mundo:</b> el generador
+    <em>nunca ve los datos reales</em>. Ni uno. Lo único que recibe es el veredicto del
+    discriminador sobre sus propias falsificaciones. Aprende a imitar algo que no ha visto jamás,
+    solo a partir de lo bien o mal que cuela.</div>
+    <p>La analogía más cercana a tu oficio es un falsificador que nunca ha tenido delante un
+    original y un perito que examina cada intento. El falsificador solo sabe si el dictamen fue
+    «auténtico» o «falso», y corrige a partir de ahí. Cada vez que el perito aprende a detectar un
+    rasgo, el falsificador aprende a no dejarlo.</p>
+  </div>
+
+  <div class="grid2 wide-left">
+    <div class="card">
+      <canvas id="ganmap" height="400" aria-label="Datos reales, falsificaciones y campo del discriminador"></canvas>
+      <div class="row" style="margin-top:12px">
+        <span class="tag"><span class="swatch" style="background:var(--teal-brand)"></span>Datos reales</span>
+        <span class="tag"><span class="swatch" style="background:var(--amber)"></span>Falsificaciones</span>
+        <span class="tag">El fondo es lo que cree el discriminador</span>
+      </div>
+      <p class="live" id="gannarr" aria-live="polite"></p>
+    </div>
+    <div>
+      <div class="card">
+        <h3>El experimento</h3>
+        <div class="ctrls">
+          <label><span class="lab">Distribución que hay que imitar</span>
+            <select id="gandist">
+              <option value="nube">Una nube</option>
+              <option value="cumulos">Dos cúmulos separados</option>
+              <option value="anillo">Un anillo (el caso difícil)</option>
+            </select></label>
+          <label><span class="lab">Qué tan exigente es el detector</span>
+            <select id="ganbal">
+              <option value="par">Equilibrado</option>
+              <option value="gen">Detector laxo</option>
+              <option value="dis">Detector exigente</option>
+            </select></label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="ganrun">▶ Entrenar</button>
+          <button class="btn" id="ganstep">+200 pasos</button>
+          <button class="btn sm ghost" id="ganreset">Reiniciar</button>
+        </div>
+        <div class="metrics" id="ganstats"></div>
+        <p><small>Cada paso enfrenta un lote de 32 casos reales con falsificaciones nuevas. Con el
+        detector exigente la imitación se asienta hacia los 300 pasos; equilibrado tarda unos 2000 y
+        da tumbos por el camino. Si te deja en «copia unos pocos ejemplos», sigue dándole pasos: el
+        vaivén entre mejorar y empeorar no es un fallo del montaje, es cómo se entrena esto.</small></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Qué tienes que observar</h3>
+    <ol class="steps">
+      <li><b>Al principio el discriminador gana con holgura.</b> Las falsificaciones salen
+      amontonadas y el fondo se parte en dos: una zona donde cree que hay cosas reales y otra donde
+      no. Mira las cifras: D sobre reales cerca de 1, D sobre falsos cerca de 0.</li>
+      <li><b>Las falsificaciones migran.</b> No porque hayan visto los datos reales, sino porque el
+      generador empuja sus salidas hacia donde el discriminador se equivoca.</li>
+      <li><b>El fondo se aplana.</b> Cuando el discriminador ya no sabe distinguirlos, su salida se
+      acerca a 0,5 en todas partes y el color desaparece. Ese blanco significa una sola cosa: las
+      falsificaciones son indistinguibles <em>para ese</em> discriminador. No dice nada sobre si son
+      buenas.</li>
+      <li><b>Hacen falta tres comprobaciones, no una.</b> El fondo en blanco dice que el detector se
+      rindió. «Falsos sobre datos reales» dice si las falsificaciones caen donde cae el material
+      auténtico. «Dispersión frente al original» dice si además conservan su variedad. Las tres a la
+      vez son convergencia; dos de tres es un resultado que suena a éxito y no lo es. Fíjate en que
+      un generador puede subir la cobertura al 100 % simplemente repitiendo el caso más típico: está
+      aprobando el examen sin haber aprendido la materia.</li>
+      <li><b>Afloja el detector y mira qué pasa.</b> Con <b>detector laxo</b> el ámbar se apelmaza:
+      la cobertura se mantiene alta y la dispersión se desploma. Sin alguien que distinga de verdad,
+      al falsificador le basta con repetir cuatro ejemplos. Con <b>detector exigente</b> ocurre lo
+      contrario de lo que suele contarse: el generador aprende antes y mejor. Un examinador severo
+      no estorba al aprendizaje, lo dirige; el laxo es el que produce trabajo que solo sirve para
+      pasar el control.</li>
+      <li><b>Prueba el anillo.</b> Es la figura más difícil: hay que cubrir el borde y dejar vacío
+      el centro. Equilibrado, el generador ronda la figura y tarda en asentarse. No es un defecto de
+      este laboratorio, es la razón por la que entrenar una GAN tiene fama de delicado.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>Colapso de modos</h3>
+    <p>Al generador se le pide engañar al discriminador, no reproducir toda la variedad de los
+    datos. Si encuentra un rincón donde cuela, puede quedarse ahí y producir siempre lo mismo: es el
+    <button class="t" data-t="colapso-modos">colapso de modos</button>. Aquí lo verás medido de dos
+    maneras. Con los dos cúmulos, el laboratorio cuenta cuántas falsificaciones caen en cada uno: si
+    uno queda vacío, el generador renunció a la mitad del mundo. Y en cualquier figura, la
+    «dispersión frente al original» delata la forma más discreta del problema, la que no vacía
+    ningún cúmulo pero encoge todos: falsificaciones correctas, repetidas y pocas.</p>
+    <p>Traducido a un expediente: un sistema entrenado para generar historiales, declaraciones o
+    informes plausibles puede devolver siempre las mismas cuatro variantes del caso más común y
+    superar igualmente cualquier revisión por muestreo. Lo que falta no se ve en los documentos que
+    produce, sino en los que nunca produce.</p>
+    <div class="row">
+      <button class="btn sm" data-ganset="cumulos|par">Dos cúmulos, equilibrado</button>
+      <button class="btn sm" data-ganset="cumulos|gen">Dos cúmulos, detector laxo</button>
+      <button class="btn sm" data-ganset="anillo|dis">Anillo, detector exigente</button>
+    </div>
+    <p>Para un jurista esto importa más de lo que parece: un sistema generativo puede producir
+    resultados impecables y, a la vez, haber descartado en silencio partes enteras de la población
+    que debía representar.</p>
+  </div>
+
+  <details>
+    <summary>Esto no es lo mismo que un «ejemplo adversario»</summary>
+    <p>Los dos llevan el mismo apellido y se confunden constantemente. Una red adversarial es un
+    <em>método de entrenamiento</em>: dos modelos que compiten para generar datos. Un
+    <button class="t" data-t="ejemplo-adversario">ejemplo adversario</button> es un <em>ataque</em>:
+    una entrada modificada con alteraciones mínimas, a menudo imperceptibles, que hace que un
+    clasificador ya entrenado se equivoque. Unas pegatinas en una señal de tráfico que llevan al
+    sistema a leer otra cosa son un ejemplo adversario, no una GAN. En un informe conviene no
+    intercambiarlos: el primero es cómo se fabrica, el segundo es cómo se ataca.</p>
+  </details>
+
+  <div class="law">Un detector de contenido sintético es, estructuralmente, el discriminador de este
+  mismo juego. Cualquier detector que se publique puede incorporarse como adversario para entrenar
+  un generador que lo esquive, de modo que su eficacia caduca sin que nadie lo haya tocado: el
+  retraso es una propiedad del método, no una carencia del fabricante. De ahí tres consecuencias.
+  El porcentaje de acierto de un detector describe el material de ayer, no el que llegará mañana.
+  Afirmar en un peritaje que una grabación es sintética «con un 98 % de confianza» traslada a una
+  conclusión sobre el caso concreto una cifra que solo describe el comportamiento medio del detector
+  sobre su propio conjunto de prueba. Y la vía que no depende de esta carrera es la de la
+  procedencia —firma en origen, metadatos verificables, cadena de custodia—, que no pregunta si algo
+  parece auténtico sino de dónde viene.</div>
+
+  <div class="q" data-q="q10" data-ok="1">
+    <div class="qh">Comprobación</div>
+    <p class="qt">Un proveedor ofrece un detector de deepfakes con 98 % de acierto, verificado por un
+    tercero independiente. ¿Qué añade a esa cifra el mecanismo que acabas de ver?</p>
+    <div class="opts">
+      <button data-i="0">Nada relevante: si un tercero verificó el 98 %, el rendimiento está acreditado.</button>
+      <button data-i="1">Que ese mismo detector puede usarse como discriminador para entrenar un generador que lo engañe, así que la cifra describe el material de ayer y se degrada sola.</button>
+      <button data-i="2">Que al detector le faltan datos de entrenamiento para llegar al 100 %.</button>
+    </div>
+    <div class="fb" hidden></div>
+  </div>
+
+  <div class="foot">
+    <button class="btn ghost" data-go="s8">← Estación 8</button>
+    <button class="btn primary" data-go="s9">Estación 10 · Sesgos y límites →</button>
+  </div>
+</section>
+
+<!-- ============================ ESTACIÓN 10 · SESGOS ============================ -->
+<section class="station" id="s9" hidden>
+  <div class="head">
+    <div class="num">10</div>
     <h2>Dónde falla de verdad: datos, etiquetas y disparidad</h2>
     <p class="goal">Objetivo: comprobar con un experimento que un modelo con alta exactitud global puede
     repartir sus errores de forma muy desigual, y que excluir la variable sensible de las entradas no lo
@@ -1439,15 +1606,15 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
   </div>
 
   <div class="foot">
-    <button class="btn ghost" data-go="s8">← Estación 8</button>
-    <button class="btn primary" data-go="s10">Estación 10 · Glosario y cierre →</button>
+    <button class="btn ghost" data-go="sgan">← Estación 9</button>
+    <button class="btn primary" data-go="s10">Estación 11 · Glosario y cierre →</button>
   </div>
 </section>
 
 <!-- ============================ ESTACIÓN 10 ============================ -->
 <section class="station" id="s10" hidden>
   <div class="head">
-    <div class="num">10</div>
+    <div class="num">11</div>
     <h2>Glosario completo, cierre y guía docente</h2>
     <p class="goal">Objetivo: tener a mano todo el vocabulario, dejar registro de tus conclusiones y
     poder reutilizar el laboratorio en clase.</p>
@@ -1507,12 +1674,14 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
           Es el momento de mayor densidad conceptual: conviene no acelerar.</td></tr>
         <tr><td class="num">55–70</td><td>5</td><td>Trabajo por parejas con los cuatro experimentos
           propuestos. Pedir hipótesis escrita antes de entrenar.</td></tr>
-        <tr><td class="num">70–85</td><td>6 y 9</td><td>El núcleo para juristas: umbral como decisión de
+        <tr><td class="num">70–85</td><td>6 y 10</td><td>El núcleo para juristas: umbral como decisión de
           política y disparidad por grupo. Debate con la tabla de preguntas.</td></tr>
-        <tr><td class="num">85–90</td><td>10</td><td>Descarga del informe como evidencia de la sesión.</td></tr>
+        <tr><td class="num">85–90</td><td>11</td><td>Descarga del informe como evidencia de la sesión.</td></tr>
       </table>
       <p><small>Las estaciones 7 y 8 funcionan bien como trabajo autónomo posterior, o como sesión
-      independiente de 45 minutos si el grupo necesita ver imágenes y tipos de salida.</small></p>
+      independiente de 45 minutos si el grupo necesita ver imágenes y tipos de salida. La 9, sobre redes
+      adversariales, merece sesión propia con grupos que trabajen prueba digital o deepfakes: el
+      experimento tarda unos minutos en converger y da mucho juego para debatir.</small></p>
     </details>
     <details>
       <summary>Preguntas de examen que este laboratorio permite plantear</summary>
@@ -1529,6 +1698,8 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
         quedar documentado sobre esa elección.</li>
         <li>Describa qué información puede ofrecerse realmente cuando se exige explicación de una
         decisión automatizada, y qué no.</li>
+        <li>Explique por qué un detector de contenido sintético pierde eficacia con el tiempo aunque
+        nadie lo modifique, partiendo del mecanismo con que se entrena un generador adversarial.</li>
       </ol>
     </details>
     <details>
@@ -1543,7 +1714,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
   </div>
 
   <div class="foot">
-    <button class="btn ghost" data-go="s9">← Estación 9</button>
+    <button class="btn ghost" data-go="s9">← Estación 10</button>
     <button class="btn" data-go="s0">Volver al inicio</button>
   </div>
 </section>
@@ -2016,7 +2187,7 @@ const G = {
 "proxy":{t:"Variable proxy",c:"Problemas y límites",
  d:"Variable que, sin ser la sensible, está lo bastante correlacionada con ella para sustituirla de hecho.",
  a:"El código postal que acaba informando del origen o del nivel de renta.",
- e:"En la estación 9, la inestabilidad de ingresos actúa como proxy del grupo, que nunca fue una entrada.",
+ e:"En la estación 10, la inestabilidad de ingresos actúa como proxy del grupo, que nunca fue una entrada.",
  o:"Suprimir la variable sensible no elimina su efecto: el modelo la reconstruye a partir de las demás.",
  j:"Por eso la ceguera formal no produce neutralidad, y por eso el análisis exige métricas desglosadas por subgrupo en lugar de la mera ausencia de la variable.",
  r:["sesgo-datos","etiqueta","caracteristica"]},
@@ -2186,7 +2357,50 @@ const G = {
  a:"Recalibrar un criterio ya formado con la práctica concreta de esta oficina.",
  e:"Suele hacerse con tasa de aprendizaje baja para no destruir lo aprendido.",
  o:"Un ajuste fino con pocos datos puede degradar capacidades generales del modelo base sin que se note en las pruebas de la tarea nueva.",
- r:["transferencia","tasa-aprendizaje"]}
+ r:["transferencia","tasa-aprendizaje"]},
+
+/* --- Adversariales --- */
+"gan":{t:"Red adversarial (GAN)",c:"Otros modelos y tareas",
+ d:"Método de entrenamiento en el que dos redes compiten: una fabrica datos falsos y la otra intenta distinguirlos de los reales.",
+ a:"Un falsificador y un perito que solo se comunican por el dictamen: cada uno mejora porque el otro aprieta.",
+ e:"La estación 9 entrena una sobre nubes de puntos; las mismas ideas producen rostros sintéticos.",
+ o:"No es una arquitectura concreta sino una forma de entrenar. Y no hay etiquetas humanas: la señal de aprendizaje la produce el adversario.",
+ j:"Es el mecanismo que explica por qué el contenido sintético mejora tan rápido y por qué los detectores envejecen solos.",
+ r:["generador","discriminador","colapso-modos","deepfake"]},
+"generador":{t:"Generador",c:"Otros modelos y tareas",
+ d:"La red que fabrica casos falsos a partir de ruido aleatorio.",
+ a:"El falsificador que nunca ha visto un original y solo se guía por el dictamen del perito.",
+ e:"Recibe dos números al azar y devuelve un punto que intenta pasar por real.",
+ o:"No copia ni recupera datos de entrenamiento: construye casos nuevos. Que no copie no significa que no pueda reproducir rasgos identificables de los originales.",
+ r:["gan","discriminador","difusion"]},
+"discriminador":{t:"Discriminador",c:"Otros modelos y tareas",
+ d:"La red que recibe casos reales y falsos mezclados y estima la probabilidad de que cada uno sea real.",
+ a:"El perito que dictamina pieza por pieza.",
+ e:"Es un clasificador binario corriente, como el de la estación 6; lo distinto es de dónde salen sus ejemplos negativos.",
+ o:"Cuando ya no distingue, su salida se acerca a 0,5 en todas partes. Eso no significa que sea malo: significa que el generador lo ha alcanzado.",
+ j:"Un detector de contenido sintético es un discriminador, y por tanto puede reutilizarse como adversario para entrenar al generador siguiente.",
+ r:["gan","generador","clasificacion"]},
+"colapso-modos":{t:"Colapso de modos",c:"Problemas y límites",
+ d:"Fallo en el que el generador produce siempre variantes de lo mismo y abandona partes enteras de la distribución real.",
+ a:"Un falsificador que domina un único billete y deja de intentar los demás porque ese ya cuela.",
+ e:"Con dos cúmulos de datos, todas las falsificaciones caen en uno solo.",
+ o:"Es compatible con engañar al discriminador: el objetivo que se optimiza es colar, no representar toda la variedad.",
+ j:"Un sistema generativo puede dar resultados impecables y haber descartado en silencio a parte de la población que debía representar.",
+ r:["gan","generador","sesgo-datos"]},
+"deepfake":{t:"Deepfake",c:"Problemas y límites",
+ d:"Contenido sintético de voz, imagen o vídeo que imita a una persona real con calidad suficiente para pasar por auténtico.",
+ a:"Una falsificación documental cuyo coste de producción ha caído casi a cero.",
+ e:"Suplantación de voz en una orden de transferencia; vídeo atribuido a una persona que nunca lo grabó.",
+ o:"La detección automática va por detrás por diseño: cualquier detector publicado sirve de adversario para entrenar al generador siguiente.",
+ j:"Empuja el análisis desde «¿parece auténtico?» hacia la procedencia: firma en origen, metadatos verificables y cadena de custodia.",
+ r:["gan","ejemplo-adversario","alucinacion"]},
+"ejemplo-adversario":{t:"Ejemplo adversario",c:"Problemas y límites",
+ d:"Entrada modificada con alteraciones mínimas, a menudo imperceptibles, que hace fallar a un clasificador ya entrenado.",
+ a:"Una marca casi invisible en un documento que descoloca al lector automático sin que una persona note nada.",
+ e:"Unas pegatinas en una señal de tráfico que llevan al sistema a leer un límite de velocidad distinto.",
+ o:"No es lo mismo que una red adversarial: aquello es un método de entrenamiento, esto es un ataque sobre un modelo ya desplegado.",
+ j:"Es el argumento técnico contra confiar en un clasificador como única barrera de seguridad, y una vía de manipulación difícil de detectar a simple vista.",
+ r:["gan","caja-negra","deteccion"]}
 };
 
 /* ---------------------- 2. NÚCLEO ---------------------- */
@@ -2238,8 +2452,9 @@ const STATIONS=[
   {id:"s6",n:"06",label:"Aciertos y errores",goal:"El umbral, la matriz de confusión y el coste de fallar"},
   {id:"s7",n:"07",label:"Imágenes y CNN",goal:"Dibuja y entrena una red convolucional"},
   {id:"s8",n:"08",label:"Tipos de predicción",goal:"Binaria, multiclase, multietiqueta y regresión"},
-  {id:"s9",n:"09",label:"Sesgos y límites",goal:"Alta exactitud con errores repartidos de forma desigual"},
-  {id:"s10",n:"10",label:"Glosario y cierre",goal:"96 fichas, tu informe y la guía docente"}
+  {id:"sgan",n:"09",label:"Redes adversariales",goal:"Dos modelos que compiten: el mecanismo de los deepfakes"},
+  {id:"s9",n:"10",label:"Sesgos y límites",goal:"Alta exactitud con errores repartidos de forma desigual"},
+  {id:"s10",n:"11",label:"Glosario y cierre",goal:"102 fichas, tu informe y la guía docente"}
 ];
 const ST={visited:{},answers:{},notes:{},level:"b"};
 function save(){try{localStorage.setItem("neurallab4",JSON.stringify(ST))}catch(e){}}
@@ -2357,6 +2572,9 @@ const FB={
  q8:["Correcto. Los riesgos pueden concurrir, así que cada uno necesita su propia salida independiente y su propio umbral.",
      "Softmax fuerza que las cinco salidas sumen 1: para subir un riesgo tendría que bajar otro, lo que es falso en este problema.",
      "Una regresión a un número no permite expresar la concurrencia de varios riesgos."],
+ q10:["Que un tercero lo verifique acredita cómo se comportó con el material de ese momento, que es justo lo que caduca.",
+     "Correcto. El detector es el discriminador del mismo juego: publicarlo lo convierte en adversario disponible para entrenar un generador que lo esquive. Su rendimiento se degrada sin que nadie toque el detector, así que esa cifra es una fotografía con fecha, no una propiedad del producto.",
+     "Más datos mejoran el detector frente a lo que ya existe, no frente a lo que se entrenará después contra él."],
  q9:["Esta es precisamente la intuición que el experimento de esta estación refuta.",
      "La exactitud global es compatible con cualquier reparto desigual del error entre subgrupos.",
      "Correcto. Sin el error desglosado no hay información sobre el trato a cada grupo, y las variables proxy permiten reproducir el patrón sin que la variable sensible figure como entrada."]
@@ -2384,7 +2602,7 @@ const TASKS=[
  "Sube el ruido al máximo con el patrón en círculo y entrena mucho tiempo. Describe qué les pasa a las dos curvas y qué nombre tiene eso.",
  "En la estación 6, fija el coste del falso negativo en 10 y el del falso positivo en 1. ¿Dónde queda el umbral óptimo y qué significa esa elección para quien recibe la decisión?",
  "En la estación 7, dibuja una figura que no sea ninguna de las cuatro clases. ¿Qué responde el modelo y por qué no puede responder otra cosa?",
- "En la estación 9, compara las dos tablas de error por grupo. ¿Dónde estaba el sesgo y por qué no lo arregla quitar la variable del grupo?",
+ "En la estación 10, compara las dos tablas de error por grupo. ¿Dónde estaba el sesgo y por qué no lo arregla quitar la variable del grupo?",
  "Con lo aprendido: redacta las cinco preguntas que harías a un proveedor antes de valorar un sistema de cribado automático."
 ];
 function buildTasks(){
@@ -3687,7 +3905,200 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
   onShow.s8=()=>{stats();vision()};onResize.s8=()=>{stats();vision()};
 })();
 
-/* ======================= ESTACIÓN 9 ======================= */
+/* ======================= ESTACIÓN 9 · ADVERSARIALES ======================= */
+(function(){
+  const H=48,BATCH=32;
+  /* n = actualizaciones del discriminador por cada una del generador.
+     calibrado midiendo cobertura y dispersion a 2000 pasos en las tres figuras */
+  const BAL={par:{d:.008,g:.004,n:2},gen:{d:.0015,g:.006,n:1},dis:{d:.012,g:.0006,n:3}};
+  let G,D,sG,sD,t,reales,ruido,timer=null,nar="";
+  const rnd=maker(20261127);
+  const gauss=()=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185*v)};
+
+  /* --- perceptrón genérico con paso hacia atrás también sobre la entrada --- */
+  function net(sizes,outAct){
+    const L=[];
+    for(let i=0;i<sizes.length-1;i++){
+      const a=sizes[i],b=sizes[i+1],lim=Math.sqrt(6/(a+b));
+      L.push({w:Array.from({length:b},()=>Array.from({length:a},()=>(rnd()*2-1)*lim)),
+              b:new Array(b).fill(0),act:i===sizes.length-2?outAct:"tanh"});
+    }
+    return L;
+  }
+  function fwd(n,x){
+    const a=[x];
+    n.forEach(l=>{
+      const p=a[a.length-1];
+      a.push(l.w.map((row,k)=>{
+        let z=l.b[k];for(let j=0;j<row.length;j++)z+=row[j]*p[j];
+        return l.act==="tanh"?Math.tanh(z):l.act==="sigmoid"?sig(z):z;
+      }));
+    });
+    return a;
+  }
+  const zero=n=>n.map(l=>({w:l.w.map(r=>r.map(()=>0)),b:l.b.map(()=>0)}));
+  /* delta es el gradiente respecto a la preactivación de la última capa.
+     Devuelve el gradiente respecto a la ENTRADA, que es lo que necesita el generador. */
+  function bwd(n,a,delta,g){
+    let d=delta;
+    for(let i=n.length-1;i>=0;i--){
+      const l=n[i],prev=a[i],dp=new Array(prev.length).fill(0);
+      for(let k=0;k<l.w.length;k++)for(let j=0;j<prev.length;j++)dp[j]+=l.w[k][j]*d[k];
+      if(i>0)for(let j=0;j<prev.length;j++)dp[j]*=(n[i-1].act==="tanh")?(1-prev[j]*prev[j]):1;
+      if(g)for(let k=0;k<l.w.length;k++){
+        for(let j=0;j<prev.length;j++)g[i].w[k][j]+=d[k]*prev[j];
+        g[i].b[k]+=d[k];
+      }
+      d=dp;
+    }
+    return d;
+  }
+  const adam=n=>n.map(l=>({mw:l.w.map(r=>r.map(()=>0)),vw:l.w.map(r=>r.map(()=>0)),
+    mb:l.b.map(()=>0),vb:l.b.map(()=>0)}));
+  function apply(n,g,lr,m,st,step){
+    const b1=.5,b2=.999,e=1e-8,c1=1-Math.pow(b1,step),c2=1-Math.pow(b2,step);
+    n.forEach((l,i)=>l.w.forEach((row,k)=>{
+      const S=st[i];
+      row.forEach((_,j)=>{
+        const gr=g[i].w[k][j]/m;
+        S.mw[k][j]=b1*S.mw[k][j]+(1-b1)*gr;S.vw[k][j]=b2*S.vw[k][j]+(1-b2)*gr*gr;
+        row[j]-=lr*(S.mw[k][j]/c1)/(Math.sqrt(S.vw[k][j]/c2)+e);
+      });
+      const gb=g[i].b[k]/m;
+      S.mb[k]=b1*S.mb[k]+(1-b1)*gb;S.vb[k]=b2*S.vb[k]+(1-b2)*gb*gb;
+      l.b[k]-=lr*(S.mb[k]/c1)/(Math.sqrt(S.vb[k]/c2)+e);
+    }));
+  }
+
+  function sample(){
+    const k=$("gandist").value;
+    if(k==="nube")return [.35+gauss()*.16,.3+gauss()*.16];
+    if(k==="cumulos")return rnd()<.5?[-.5+gauss()*.12,-.4+gauss()*.12]:[.5+gauss()*.12,.45+gauss()*.12];
+    const a=rnd()*6.283185,r=.6+gauss()*.05;
+    return [r*Math.cos(a),r*Math.sin(a)];
+  }
+  const fake=z=>fwd(G,z).at(-1);
+  /* dispersion: mean distance to the nearest neighbour inside the same set.
+     a generator collapsed onto a few points has a tiny value even if every
+     point lands on real data, which is exactly what coverage cannot see. */
+  function nnMean(P){
+    let s=0;
+    for(let i=0;i<P.length;i++){
+      let m=Infinity;
+      for(let j=0;j<P.length;j++){
+        if(i===j)continue;
+        const d=Math.hypot(P[i][0]-P[j][0],P[i][1]-P[j][1]);
+        if(d<m)m=d;
+      }
+      s+=m;
+    }
+    return s/P.length;
+  }
+  let nnReal=1;
+
+  function reset(){
+    stop();
+    G=net([2,H,H,2],"lin");D=net([2,H,H,1],"sigmoid");
+    sG=adam(G);sD=adam(D);t=0;
+    reales=Array.from({length:180},sample);nnReal=Math.max(1e-6,nnMean(reales));
+    ruido=Array.from({length:120},()=>[gauss(),gauss()]);   /* fijo: así se ve migrar, no parpadear */
+    nar="";draw();
+  }
+  function step(){
+    t++;
+    const lr=BAL[$("ganbal").value];
+    for(let k=0;k<lr.n;k++){
+      const gD=zero(D);
+      for(let i=0;i<BATCH;i++){
+        const r=sample(),ar=fwd(D,r);bwd(D,ar,[ar.at(-1)[0]-1],gD);
+        const f=fake([gauss(),gauss()]),af=fwd(D,f);bwd(D,af,[af.at(-1)[0]],gD);
+      }
+      apply(D,gD,lr.d,BATCH*2,sD,t);
+    }
+    const gG=zero(G);
+    for(let i=0;i<BATCH;i++){
+      const aG=fwd(G,[gauss(),gauss()]),aD=fwd(D,aG.at(-1));
+      bwd(G,aG,bwd(D,aD,[aD.at(-1)[0]-1],null),gG);   /* el error vuelve a través del rival */
+    }
+    apply(G,gG,lr.g,BATCH,sG,t);
+  }
+
+  function stats(){
+    const fakes=ruido.map(fake);
+    const dr=reales.reduce((a,r)=>a+fwd(D,r).at(-1)[0],0)/reales.length;
+    const df=fakes.reduce((a,f)=>a+fwd(D,f).at(-1)[0],0)/fakes.length;
+    const cerca=fakes.filter(f=>reales.some(r=>Math.hypot(r[0]-f[0],r[1]-f[1])<.12)).length/fakes.length;
+    const variedad=Math.min(1,nnMean(fakes)/nnReal);
+    let modos=null;
+    if($("gandist").value==="cumulos"){
+      const c=[[-.5,-.4],[.5,.45]].map(ct=>fakes.filter(f=>Math.hypot(f[0]-ct[0],f[1]-ct[1])<.3).length);
+      modos=c.map(v=>Math.round(v/fakes.length*100));
+    }
+    return {fakes,dr,df,cerca,variedad,modos};
+  }
+  function narrate(S){
+    if(!t){nar="<small>Sin entrenar: el generador devuelve ruido y el discriminador aún no sabe nada.</small>";return}
+    const gap=S.dr-S.df;
+    let m;
+    const eq=Math.abs(S.dr-.5)<.12&&Math.abs(S.df-.5)<.12,pc=Math.round(S.cerca*100),vd=Math.round(S.variedad*100);
+    if(gap>.35)m=`<b>El discriminador gana con holgura.</b> Da ${fmt(S.dr,2)} a los reales y ${fmt(S.df,2)} a las falsificaciones: las distingue sin esfuerzo. El generador todavía está aprendiendo hacia dónde empujar.`;
+    else if(eq&&S.cerca>=.8&&S.variedad>=.55)
+      m=`<b style="color:var(--teal)">Indistinguibles.</b> El discriminador responde ${fmt(S.dr,2)} y ${fmt(S.df,2)} —una moneda al aire—, el ${pc} % de las falsificaciones cae sobre datos reales y conservan el ${vd} % de la dispersión del original. Las tres cosas a la vez: eso es imitar la distribución.`;
+    else if(eq&&S.cerca>=.8)
+      m=`<b style="color:var(--amber-deep)">Copia unos pocos ejemplos; no imita al conjunto.</b> El ${pc} % de las falsificaciones cae sobre datos reales y el discriminador ya no distingue, pero mira el lienzo: el ámbar está apelmazado, repitiendo unos pocos puntos. Su dispersión es apenas el ${vd} % de la que tienen los datos reales. El generador descubrió que repetir los casos más típicos basta para aprobar el examen. Pasa el control de calidad sin haber aprendido la variedad del material: si esto fueran historiales de clientes, estaría devolviendo siempre los mismos.`;
+    else if(eq)
+      m=`<b style="color:var(--amber-deep)">Ojo con esta situación.</b> El discriminador está en ${fmt(S.dr,2)} y ${fmt(S.df,2)}: se ha quedado sin criterio. Pero mira el lienzo: solo el ${pc} % de las falsificaciones cae sobre datos reales. Que el detector ya no distinga <em>no prueba</em> que las falsificaciones sean buenas; prueba que ese detector dejó de servir. Son dos cosas distintas y se confunden constantemente.`;
+    else m=`Están cerca: ${fmt(S.dr,2)} frente a ${fmt(S.df,2)}. El ${pc} % de las falsificaciones ya cae sobre la zona de los datos reales.`;
+    if(S.modos){
+      const min=Math.min(...S.modos);
+      m+= min<12&&S.cerca>.4
+        ? ` <b style="color:var(--amber-deep)">Colapso de modos:</b> el reparto entre los dos cúmulos es ${S.modos[0]} % y ${S.modos[1]} %. El generador ha abandonado uno y sigue colando falsificaciones.`
+        : ` Reparto entre cúmulos: ${S.modos[0]} % y ${S.modos[1]} %.`;
+    }
+    nar=m;
+  }
+  function draw(){
+    const S=stats();narrate(S);
+    const {c,w,h}=fit($("ganmap")),B=8;
+    for(let y=0;y<h;y+=B)for(let x=0;x<w;x+=B){
+      const p=fwd(D,[x/w*2-1,1-y/h*2]).at(-1)[0],k=Math.min(1,Math.abs(p-.5)*2);
+      c.fillStyle=p>=.5?`rgb(${Math.round(255-54*k)},${Math.round(255-19*k)},${Math.round(255-13*k)})`
+                       :`rgb(${Math.round(255-2*k)},${Math.round(255-27*k)},${Math.round(255-79*k)})`;
+      c.fillRect(x,y,B,B);
+    }
+    const X=p=>(p[0]+1)*w/2,Y=p=>(1-p[1])*h/2;
+    reales.forEach(r=>{c.beginPath();c.arc(X(r),Y(r),3.4,0,7);c.fillStyle=CO.blue;c.fill()});
+    S.fakes.forEach(f=>{c.beginPath();c.arc(X(f),Y(f),3.4,0,7);c.fillStyle=CO.amber;c.fill()});
+    label(c,"el fondo turquesa es «lo creo real»; el ámbar, «lo creo falso»",8,h-8,CO.dim,11.5);
+    $("ganstats").innerHTML=
+      `<div class="metric">Paso<b>${t}</b></div>`+
+      `<div class="metric blue">D sobre reales<b>${fmt(S.dr,2)}</b></div>`+
+      `<div class="metric amber">D sobre falsos<b>${fmt(S.df,2)}</b></div>`+
+      `<div class="metric">Falsos sobre datos reales<b>${Math.round(S.cerca*100)}%</b></div>`+
+      `<div class="metric">Dispersión frente al original<b>${Math.round(S.variedad*100)}%</b></div>`;
+    $("gannarr").innerHTML=nar;
+  }
+  function stop(){if(timer){clearInterval(timer);timer=null}$("ganrun").textContent="▶ Entrenar"}
+  $("ganrun").onclick=()=>{
+    if(timer){stop();return}
+    $("ganrun").textContent="Ⅱ Pausar";
+    timer=setInterval(()=>{for(let i=0;i<6;i++)step();draw()},60);
+  };
+  $("ganstep").onclick=()=>{stop();for(let i=0;i<200;i++)step();draw()};
+  $("ganreset").onclick=reset;
+  $("gandist").onchange=reset;
+  $("ganbal").onchange=()=>{};
+  $$("[data-ganset]").forEach(b=>b.onclick=()=>{
+    const [d,bal]=b.dataset.ganset.split("|");
+    $("gandist").value=d;$("ganbal").value=bal;reset();go("sgan");
+  });
+  (window.LABSTOP=window.LABSTOP||[]).push(stop);
+  reset();
+  onShow.sgan=draw;onResize.sgan=draw;
+})();
+
+/* ======================= ESTACIÓN 10 · SESGOS ======================= */
 (function(){
   let data=[],net=null,results={};
   function build(){

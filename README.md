@@ -9,7 +9,7 @@ dato sale del equipo.
 
 ## Contenido
 
-Diez estaciones en orden de dificultad creciente:
+Once estaciones en orden de dificultad creciente:
 
 | # | Estación | Qué se aprende |
 |---|----------|----------------|
@@ -21,8 +21,9 @@ Diez estaciones en orden de dificultad creciente:
 | 6 | Aciertos y errores | Umbral, coste asimétrico del error y explicación contrafáctica caso a caso |
 | 7 | Imágenes y CNN | Convolución paso a paso y red convolucional entrenable |
 | 8 | Tipos de predicción | Binaria, multiclase, multietiqueta y regresión |
-| 9 | Sesgos y límites | Disparidad de error por subgrupo con etiquetas históricas sesgadas |
-| 10 | Glosario y cierre | 96 fichas de vocabulario, informe del estudiante y guía docente |
+| 9 | Redes adversariales | Generador y discriminador compitiendo: el mecanismo de los deepfakes, el colapso de modos medido y por qué la detección envejece sola |
+| 10 | Sesgos y límites | Disparidad de error por subgrupo con etiquetas históricas sesgadas |
+| 11 | Glosario y cierre | 102 fichas de vocabulario, informe del estudiante y guía docente |
 
 Un glosario transversal cubre todos los términos técnicos que aparecen en el
 texto: definición sin jerga, analogía, ejemplo numérico, error de interpretación
