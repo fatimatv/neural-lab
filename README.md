@@ -36,6 +36,12 @@ La estación 10 incluye una guía docente con una secuencia de 90 minutos, seis
 preguntas de examen y las limitaciones que conviene advertir al grupo. Cada
 estudiante puede generar al final un informe con sus respuestas y conclusiones.
 
+## Mantenimiento
+
+`node tools/audit-glosario.js` comprueba las dos direcciones del glosario: que todo
+término subrayado en el texto tenga ficha y que toda ficha esté enlazada desde algún
+punto del laboratorio. Conviene pasarlo tras añadir contenido.
+
 ## Despliegue
 
 Sitio estático de un solo archivo; no hay build. Cada push a `main` despliega en

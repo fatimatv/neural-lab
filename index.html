@@ -316,7 +316,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
   <div class="head">
     <h1>Aprende cómo aprende una IA.</h1>
     <p class="lead">Diez estaciones para entender, desde cero y sin programar, qué ocurre exactamente dentro
-    de una red neuronal cuando se entrena. Todo se ejecuta en tu navegador: las redes de este laboratorio
+    de una <button class="t" data-t="red-neuronal">red neuronal</button> cuando se entrena, que es en lo que consiste el <button class="t" data-t="aprendizaje-profundo">aprendizaje profundo</button>. Todo se ejecuta en tu navegador: las redes de este laboratorio
     aprenden de verdad, delante de ti.</p>
   </div>
 
@@ -343,14 +343,14 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
   <div class="card">
     <h2>La ruta</h2>
     <p class="v-b">Las estaciones están ordenadas: cada una usa lo aprendido en la anterior. La 1 responde
-    qué significa «aprender»; la 4 abre la caja negra del aprendizaje; la 9 es la que más te servirá
+    qué significa «aprender»; la 4 abre la <button class="t" data-t="caja-negra">caja negra</button> del aprendizaje; la 9 es la que más te servirá
     cuando tengas que auditar un sistema ajeno.</p>
     <p class="v-i">Secuencia de dificultad creciente: intuición de la optimización (1–3), mecánica del
     aprendizaje (4), experimentación con arquitecturas (5), evaluación y umbrales (6), otras
     arquitecturas y objetivos (7–8), y límites, sesgo y gobernanza (9).</p>
     <p class="v-a">Recorrido: descenso de gradiente sobre pérdida logística en 2D (1), unidad lineal con
     activación sigmoide (2), geometría de la función de pérdida y efecto de la tasa de aprendizaje (3),
-    retropropagación numérica explícita en una red 2-2-1 (4), MLP con SGD por muestra y control de
+    retropropagación numérica explícita en una red 2-2-1 (4), MLP con <button class="t" data-t="sgd">SGD</button> por muestra y control de
     hiperparámetros (5), análisis operativo de umbral y matriz de confusión con costes asimétricos (6),
     CNN con convolución 3×3, ReLU y agrupamiento (7), cabezas de salida y funciones de pérdida por tipo de
     tarea (8), disparidad de error por subgrupo con etiquetas históricas sesgadas (9).</p>
@@ -359,7 +359,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
 
   <div class="note">
     <b>Antes de empezar.</b> Nada de lo que hagas aquí sale de tu equipo: no hay servidor, ni envío de datos,
-    ni cuenta de usuario. Todos los datos de los ejemplos son sintéticos, generados por reglas inventadas
+    ni cuenta de usuario. Todos los <button class="t" data-t="dato">datos</button> de los ejemplos son sintéticos, generados por reglas inventadas
     para enseñar, y ninguno de estos modelos debe usarse para decidir sobre personas.
   </div>
 
@@ -430,7 +430,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
   <div class="card">
     <h3>Qué acabas de ver</h3>
     <ol class="steps">
-      <li><b>Un modelo es un puñado de números.</b> Aquí solo tres. La red de la estación 5 tendrá
+      <li><b>Un <button class="t" data-t="modelo">modelo</button> es un puñado de números.</b> Aquí solo tres. La red de la estación 5 tendrá
       cientos, pero la naturaleza es idéntica: números que se multiplican por las entradas y se suman.</li>
       <li><b>Equivocarse se puede contar.</b> El contador de errores es una medida tosca de
       <button class="t" data-t="perdida">pérdida</button>: cuanto más alto, peor va el modelo.</li>
@@ -477,7 +477,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
     <h3>Las cuatro operaciones</h3>
     <ol class="steps">
       <li><b>Recibe entradas.</b> Valores numéricos. En este ejemplo: horas de estudio y horas de práctica
-      de un estudiante, ambas normalizadas entre 0 y 1.
+      de un estudiante, ambas <button class="t" data-t="normalizacion">normalizadas</button> entre 0 y 1.
       <button class="t" data-t="entrada">Entrada</button> ·
       <button class="t" data-t="caracteristica">variable</button></li>
       <li><b>Multiplica cada entrada por su peso.</b> El <button class="t" data-t="peso">peso</button> dice
@@ -492,6 +492,8 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
       entre 0 y 1 para poder leerlo como «cuán seguro estoy del sí».
       <button class="t" data-t="activacion">Activación</button></li>
     </ol>
+    <p>Cada vez que mueves un mando, la neurona vuelve a ejecutar estas cuatro operaciones sobre
+    el caso que tiene delante: eso es una <button class="t" data-t="inferencia">inferencia</button>.</p>
     <p class="v-a"><span class="calc" style="display:inline-block;padding:3px 9px;margin:0">a = σ(w₁x₁ + w₂x₂ + b),  σ(z) = 1 / (1 + e⁻ᶻ)</span>
     Una sola unidad de este tipo es exactamente una regresión logística.</p>
   </div>
@@ -589,7 +591,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
   </div>
 
   <div class="card">
-    <h3>Primero: ¿cuánto de mal está una predicción?</h3>
+    <h3>Primero: ¿cuánto de mal está una <button class="t" data-t="prediccion">predicción</button>?</h3>
     <p>La respuesta correcta de un ejemplo es 1 (sí) o 0 (no). El modelo responde con un número entre 0 y
     1. La <button class="t" data-t="perdida">pérdida</button> convierte esa distancia en un castigo. La
     más usada en clasificación se llama
@@ -656,7 +658,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
           <p>En este ejemplo de un solo parámetro casi se podría. Con los 161 parámetros del laboratorio de
           la estación 5 —o los miles de millones de un modelo de lenguaje— no existe una fórmula que dé
           la solución de golpe: solo queda avanzar a pequeños pasos, evaluando la pendiente en cada
-          punto. De ahí que entrenar consuma tiempo y energía.</p>
+          punto. De ahí que entrenar consuma tanto <button class="t" data-t="computo">cómputo</button>: tiempo de máquina y energía.</p>
         </details>
       </div>
     </div>
@@ -705,10 +707,12 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
     procedimiento que reparte esa responsabilidad desde la salida hacia atrás, hasta el primer peso.</p>
     <p class="v-i">Se calcula cuánto cambiaría la <button class="t" data-t="perdida">pérdida</button> si
     cada peso cambiara un poco: su <button class="t" data-t="gradiente">gradiente</button>. Se obtiene
-    propagando el error hacia atrás por la regla de la cadena, capa a capa, y después cada peso se mueve
-    en contra de su gradiente.</p>
+    propagando el error hacia atrás por la regla de la cadena, capa a capa. El recorrido de ida, de las
+    entradas a la salida, es la <button class="t" data-t="propagacion-adelante">propagación hacia adelante</button>; este es el de
+    vuelta. Después cada peso se mueve en contra de su gradiente, y de eso se encarga el
+    <button class="t" data-t="optimizador">optimizador</button>.</p>
     <p class="v-a">Aplicación de la regla de la cadena sobre el grafo de cómputo: δ en la salida es
-    (p − y); para una capa oculta con tanh, δᵢ = (1 − aᵢ²)·Σₖ δₖ·wₖᵢ. La actualización es
+    (p − y); para una capa oculta con <button class="t" data-t="tanh">tanh</button>, δᵢ = (1 − aᵢ²)·Σₖ δₖ·wₖᵢ. La actualización es
     wᵢⱼ ← wᵢⱼ − η·δᵢ·aⱼ. Una muestra, sin momento ni regularización.</p>
     <div class="note">La red de esta estación es minúscula a propósito: <b>2 entradas → 2 neuronas
     ocultas → 1 salida</b>. Nueve números en total. Todo lo que verás a continuación es lo mismo que
@@ -773,7 +777,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
   <div class="law">Este mecanismo explica por qué la trazabilidad de un modelo es distinta de la motivación
   de una decisión. Puedes reconstruir con precisión aritmética cómo se formó cada peso y, aun así, no
   obtener una razón expresable en términos jurídicos. Cuando se exige explicación sobre una decisión
-  automatizada, lo que puede ofrecerse es la lógica del sistema, las variables empleadas y su influencia,
+  automatizada, lo que puede ofrecerse —el terreno de la <button class="t" data-t="explicabilidad">explicabilidad</button>— es la lógica del sistema, las variables empleadas y su influencia,
   no una cadena de razonamiento que el modelo nunca tuvo.</div>
 
   <div class="foot">
@@ -883,8 +887,10 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
             <select id="s5lr"><option value=".003">0,003</option><option value=".01">0,01</option><option value=".03" selected>0,03</option><option value=".1">0,1</option><option value=".3">0,3</option></select></label>
         </div>
         <div class="note" id="s5arch"></div>
-        <p><small>Cambiar los datos o la arquitectura reinicia el modelo, porque el número de pesos
-        cambia. Cambiar la tasa de aprendizaje no borra lo aprendido.</small></p>
+        <p><small>Todo lo que hay en esta tarjeta son <button class="t" data-t="hiperparametro">hiperparámetros</button>: decisiones
+        de quien entrena, no cosas que el modelo aprenda de los datos. Cambiar los datos o la arquitectura
+        reinicia el modelo —el número de pesos cambia y vuelven a una <button class="t" data-t="inicializacion">inicialización</button> aleatoria—; cambiar la tasa de aprendizaje no borra lo aprendido. Los datos sintéticos se generan
+        con una <button class="t" data-t="semilla">semilla</button> fija, así que el mismo experimento se repite igual.</small></p>
       </div>
       <div class="card">
         <h3>Dentro de la red</h3>
@@ -963,7 +969,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
 
   <div class="card">
     <h3>El modelo no clasifica: puntúa</h3>
-    <p class="v-b">La red devuelve un número entre 0 y 1. Para convertirlo en una decisión («lo marco
+    <p class="v-b">La <button class="t" data-t="salida">salida</button> de la red es un número entre 0 y 1. Para convertirlo en una decisión («lo marco
     como sospechoso» o «lo dejo pasar») hace falta una segunda cosa que el modelo no proporciona: un
     <button class="t" data-t="umbral">umbral</button>. Por costumbre se usa 0,5, pero esa cifra no tiene
     nada de natural: es una decisión de política, no un resultado técnico.</p>
@@ -988,7 +994,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
           <label><span class="lab">Umbral de decisión</span><output id="s6to">0.50</output>
             <input id="s6thr" type="range" min=".02" max=".98" step=".01" value=".5"></label>
         </div>
-        <h4 style="margin-top:14px">Matriz de confusión · 80 casos de prueba</h4>
+        <h4 style="margin-top:14px"><button class="t" data-t="matriz-confusion">Matriz de confusión</button> · 80 casos de prueba</h4>
         <table id="s6matrix"></table>
         <p class="live" id="s6read" aria-live="polite"></p>
       </div>
@@ -1199,7 +1205,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
   <div class="card">
     <h3>Cuatro preguntas distintas</h3>
     <table>
-      <tr><th>Tipo de tarea</th><th>Pregunta que responde</th><th>Última capa</th><th>Pérdida</th></tr>
+      <tr><th>Tipo de tarea</th><th>Pregunta que responde</th><th>Última <button class="t" data-t="capa">capa</button></th><th>Pérdida</th></tr>
       <tr><td><b><button class="t" data-t="clasificacion">Binaria</button></b></td><td>¿Sí o no?</td>
         <td>Una salida <button class="t" data-t="sigmoide">sigmoide</button></td><td>Entropía cruzada binaria</td></tr>
       <tr><td><b><button class="t" data-t="multiclase">Multiclase</button></b></td><td>¿Cuál de estas opciones, sabiendo que es solo una?</td>
@@ -1290,7 +1296,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
       relevancia. Un <button class="t" data-t="transformer">transformer</button> generativo predice el
       siguiente token, una y otra vez. De ahí la consecuencia que más importa en nuestro oficio: el
       objetivo del modelo es la continuación plausible, no la verdad, y una cita puede ser
-      perfectamente verosímil e inexistente.</p>
+      perfectamente verosímil e inexistente: eso es una <button class="t" data-t="alucinacion">alucinación</button>.</p>
     </details>
     <details>
       <summary>Validación, regularización y cambio de distribución</summary>
@@ -1395,7 +1401,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
       resultado se replicó igualmente, a través de variables correlacionadas. La ceguera formal no
       produce neutralidad.</p></div>
       <div class="card flat"><h4>El problema estaba en las etiquetas</h4><p>Con etiquetas corregidas, la
-      misma arquitectura y los mismos datos arrojan una brecha mucho menor. El sesgo no vivía en el
+      misma arquitectura y los mismos datos arrojan una brecha mucho menor. El <button class="t" data-t="sesgo-datos">sesgo</button> no vivía en el
       algoritmo.</p></div>
       <div class="card flat"><h4>«Lo dice el modelo» no es un fundamento</h4><p>El modelo reproduce el
       pasado que se le entregó. Cualquier afirmación sobre su imparcialidad exige evidencia de cómo se
@@ -2961,7 +2967,7 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
     if(!epoch){el.innerHTML="<small>Sin entrenar: los pesos son aleatorios, así que el mapa no significa nada todavía.</small>";return}
     const gap=a[1]-b[1];let m;
     if(a[1]<.62)m=`Todavía no distingue las clases (acierto ${Math.round(a[1]*100)} % incluso en los datos con los que aprende). `+
-      (+$("s5depth").value===0?"Sin capas ocultas solo puede trazar una recta: si los datos no se separan con una recta, no hay entrenamiento que lo arregle.":"Dale más épocas, o revisa si la tasa de aprendizaje es demasiado baja o demasiado alta.");
+      (+$("s5depth").value===0?"Sin capas ocultas solo puede trazar una recta: si los datos no se separan con una recta, no hay entrenamiento que lo arregle. Mientras falle también en los datos que ya vio, lo que tienes es <button class=\"t\" data-t=\"subajuste\">subajuste</button>.":"Dale más épocas, o revisa si la tasa de aprendizaje es demasiado baja o demasiado alta.");
     else if(gap>.12)m=`Acierta ${Math.round(a[1]*100)} % en entrenamiento pero solo ${Math.round(b[1]*100)} % en datos nuevos: una brecha de ${Math.round(gap*100)} puntos. Está aprendiendo detalles que no se repiten fuera.`;
     else if(b[1]>.9)m=`Buen resultado: ${Math.round(b[1]*100)} % sobre datos que nunca ha visto, con una brecha de solo ${Math.round(gap*100)} puntos. Esto es <button class="t" data-t="generalizacion">generalización</button>.`;
     else m=`Acierto ${Math.round(b[1]*100)} % en datos nuevos. Mira el mapa: los errores se concentran donde las dos clases se solapan, y ahí ninguna frontera puede acertar siempre.`;
@@ -3059,7 +3065,7 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
     const d=+$("s5depth").value,wd=+$("s5width").value;
     $("s5arch").innerHTML=`<b>2 entradas → ${d?d+" capa"+(d>1?"s":"")+" oculta"+(d>1?"s":"")+" de "+wd+" neuronas":"ninguna capa oculta"} → 1 salida.</b> `+
       `${params()} parámetros ajustables. `+
-      (d?"Cada capa adicional permite combinar lo detectado por la anterior, a costa de más parámetros y más riesgo de memorizar.":"Sin capas ocultas la frontera es necesariamente una línea recta.");
+      (d?"Cada capa adicional aumenta la <button class=\"t\" data-t=\"profundidad\">profundidad</button>: permite combinar lo detectado por la anterior, a costa de más parámetros y más riesgo de memorizar.":"Sin capas ocultas la frontera es necesariamente una línea recta.");
     $("s5axes").textContent=AXES[$("s5pattern").value]||"";
     $("s5noiseo").textContent=fmt(+$("s5noise").value);
     drawMap();drawCurve();drawNet();drawUnits();narrate(a,b);
