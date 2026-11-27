@@ -825,6 +825,7 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
     <div class="metric blue">Acierto entren. / prueba<b id="s5acc">—</b></div>
     <div class="metric amber">Parámetros<b id="s5params">—</b></div>
   </div>
+  <div class="note" id="s5epochhelp"></div>
   <p class="live" id="s5narr" aria-live="polite"></p>
   <div id="s5over" hidden class="warn"><strong>Señal de sobreajuste.</strong> La pérdida de entrenamiento
   baja mientras la de prueba sube: la red está memorizando los ejemplos concretos en lugar de aprender el
@@ -1125,8 +1126,9 @@ body[data-level="a"] .v-b, body[data-level="a"] .v-i{display:none}
         </div>
         <div class="metrics" id="s7stats"></div>
         <canvas id="s7chart" height="150" aria-label="Curvas de pérdida de la red convolucional"></canvas>
-        <p><small>240 imágenes de entrenamiento y 80 independientes de prueba. Una época recorre las 240 y
-        actualiza los pesos después de cada imagen.</small></p>
+        <p><small>240 imágenes de entrenamiento y 80 independientes de prueba. Una
+        <button class="t" data-t="epoca">época</button> recorre las 240 y actualiza los pesos
+        después de cada imagen.</small></p>
       </div>
     </div>
   </div>
@@ -2554,7 +2556,8 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
       ep++;
       showWeights(w1,w2,b);
       const e=draw();
-      $("s1log").innerHTML=`<b>Época ${ep}</b> · ${updates} ajustes realizados · ${plural(e)}. `+
+      $("s1log").innerHTML=`<b><button class="t" data-t="epoca">Época</button> ${ep}</b> · `+
+        `${updates} ajustes realizados · ${plural(e)}. `+
         `La máquina no mira el gráfico: para cada ejemplo calcula si se pasó o se quedó corta y empuja los tres números en consecuencia.`;
       if(ep>=35){
         clearInterval(auto);auto=null;machine=e;
@@ -2562,7 +2565,8 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
         const cmp=e<mine?`Termina con ${plural(e)}, frente a ${plural(mine)} de tu mejor intento.`
           :e===mine?`Termina con ${plural(e)}: lo mismo que tu mejor intento.`
           :`Termina con ${plural(e)}, peor que ${plural(mine)} de tu mejor intento. No es un fallo: el descenso de gradiente no minimiza el número de errores, sino la pérdida, que es otra cosa.`;
-        $("s1log").innerHTML=`<b style="color:var(--teal)">Terminado.</b> ${updates} ajustes en ${ep} épocas. ${cmp} `+
+        $("s1log").innerHTML=`<b style="color:var(--teal)">Terminado.</b> ${updates} ajustes repartidos en `+
+          `${ep} <button class="t" data-t="epoca">épocas</button>, es decir ${ep} pasadas completas por los 60 expedientes. ${cmp} `+
           `Eso es todo el entrenamiento: ninguna comprensión, solo ${updates} correcciones diminutas.`+
           `<br><small>Los mandos muestran la dirección de la raya a escala. Los pesos aprendidos son mucho mayores que el rango de los mandos —aquí rondan 13 y 5—, pero multiplicar los tres números por una misma constante no mueve la raya: lo que importa es la proporción entre ellos, no su tamaño.</small>`;
       }
@@ -3023,8 +3027,19 @@ window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(onR
     $("s5netnote").textContent=`Cada línea es un peso real en este instante: turquesa positivo, ámbar negativo, grosor según magnitud. Total: ${params()} parámetros ajustándose a la vez.`;
   }
   function ready(){return train.length>=6&&test.length>=2}
+  function epochHelp(){
+    const n=train.length;
+    $("s5epochhelp").innerHTML=
+      `Una <button class="t" data-t="epoca">época</button> es una pasada completa por los `+
+      `<b>${n}</b> ejemplos de entrenamiento. Aquí los pesos se corrigen después de cada ejemplo `+
+      `—<button class="t" data-t="lote">lote</button> de 1—, así que una época son <b>${n}</b> `+
+      `<button class="t" data-t="iteracion">ajustes</button>. `+
+      (epoch?`Llevas <b>${epoch}</b> ${epoch===1?"época":"épocas"}: <b>${(epoch*n).toLocaleString("es")}</b> ajustes acumulados.`
+            :`Todavía no has entrenado ninguna.`);
+  }
   function refresh(){
     if($("s5pattern").value==="custom")updateDrawUI();
+    epochHelp();
     if(!ready()){
       ["s5loss","s5acc"].forEach(k=>$(k).textContent="—");
       $("s5epoch").textContent=epoch;$("s5params").textContent=params();
